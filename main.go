@@ -9,11 +9,6 @@ import (
 	"strings"
 )
 
-var (
-	input  string
-	output string
-)
-
 type PinboardBookmark struct {
 	Href        string `json:"href"`
 	Description string `json:"description"`
@@ -23,9 +18,18 @@ type PinboardBookmark struct {
 	Tags        string `json:"tags"`
 }
 
+var (
+	input         string
+	output        string
+	defaultFolder string
+	unreadFolder  string
+)
+
 func main() {
 	flag.StringVar(&input, "input", "", "JSON export of Pinboard bookmarks")
 	flag.StringVar(&output, "output", "", "CSV file to write to")
+	flag.StringVar(&defaultFolder, "default-folder", "Imported", "Folder to put imported bookmarks in")
+	flag.StringVar(&unreadFolder, "unread-folder", "To Read", "Folder to put unread imported bookmarks in")
 	flag.Parse()
 
 	if input == "" {
@@ -78,17 +82,15 @@ func run(input, output string) error {
 
 // convert converts a PinboardBookmark to a CSV record to be imported on
 // Raindrop.io
-// It also add the tag "to-read" if a bookmark on Pinboard was marked as
-// unread.
 func convert(b PinboardBookmark) []string {
 	url := b.Href
+	folder := defaultFolder
+	if b.ToRead == "yes" {
+		folder = unreadFolder
+	}
 	title := b.Description
 	description := b.Extended
-	tagSlice := strings.Split(b.Tags, " ")
-	if b.ToRead == "yes" {
-		tagSlice = append(tagSlice, "to-read")
-	}
-	tags := strings.Join(tagSlice, ", ")
+	tags := strings.Join(strings.Split(b.Tags, " "), ", ")
 	created := b.Time
-	return []string{url, "Pinboard Import", title, description, tags, created}
+	return []string{url, folder, title, description, tags, created}
 }
