@@ -77,6 +77,7 @@ func run(input, output string) error {
 		return err
 	}
 
+	log.Println("✅ Converted", len(records), "bookmarks")
 	return nil
 }
 
